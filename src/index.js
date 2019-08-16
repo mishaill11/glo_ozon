@@ -13,7 +13,7 @@ function toggleCheckbox() {
     });
 }
 
-toggleCheckbox();
+
 
 //endcheckbox
 //корзина
@@ -33,7 +33,7 @@ function toggleCart() {
         document.body.style.overflow ='';
     });
 }
-toggleCart()
+
 //конец корзины
 //добавление удаление товаров
 function addCart() {
@@ -80,7 +80,7 @@ function addCart() {
         }
     }
 }
-addCart();
+
 
 //end добавление удаление товаров
 //фильтр акции
@@ -132,5 +132,91 @@ function actionPage() {
         });
     });
 }
-actionPage();
+
 //конец фильтр акции
+//получение данных с сервера
+function getData() {
+    const goodsWrapper = document.querySelector('.goods');
+    return fetch('../db/db.json')
+        .then((response) => {
+            if (response.ok) {
+                return response.json();
+            }else{
+                throw new Error ('Данные не были получены, ошибка:' + response.status);
+            }
+    })
+    .then((data) => {
+        return data;
+    })
+    .catch((err) => {
+        console.log(err);
+        goodsWrapper.innerHTML = '<div style="color: red; font-size: 30px;">Упс что-то пошло не так</div>';
+    });
+}
+//выводим карточки товара
+function renderCards(data) {
+    const goodsWrapper = document.querySelector('.goods');
+    data.goods.forEach((good) => {
+        const card = document.createElement('div');
+        card.className = 'col-12 col-md-6 col-lg-4 col-xl-3';
+        card.innerHTML = `         
+                    <div class="card" data-category="${good.category}">
+                    ${good.sale ? '<div class="card-sale">🔥Hot Sale🔥</div>' : ''}
+						<div class="card-img-wrapper">
+							<span class="card-img-top"
+								style="background-image: url('${good.img})"></span>
+						</div>
+						<div class="card-body justify-content-between">
+							<div class="card-price">${good.price} ₽</div>
+							<h5 class="card-title">${good.title}</h5>
+							<button class="btn btn-primary">В корзину</button>
+						</div>
+					</div>			
+        `;
+        goodsWrapper.appendChild(card);
+    })
+}
+
+function renderCatalog(){
+    const cards = document.querySelectorAll('.goods .card');
+    const catalogList = document.querySelector('.catalog-list');
+    const catalogWrapper = document.querySelector('.catalog');
+    const catalogBtn = document.querySelector('.catalog-button');
+    
+    const categories = new Set();
+    cards.forEach((card) => {
+        categories.add(card.dataset.category);
+    });
+    categories.forEach((item) => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        catalogList.appendChild(li);
+    });
+
+    catalogBtn.addEventListener('click', (event) => {
+        if (catalogWrapper.style.display){
+            catalogWrapper.style.display = '';
+        } else {
+            catalogWrapper.style.display = 'block';
+        }
+
+        if (event.target.tagName === 'LI') {
+            cards.forEach((elem) => {
+                if (elem.dataset.category !== event.target.textContent){
+                    elem.parentNode.style.display = '';
+                }else{
+                    elem.parentNode.style.display = 'none';
+                }
+            });
+        }
+    });
+}
+
+//конец
+getData().then((data) => {
+    renderCards(data);
+    actionPage();
+    addCart();
+    toggleCart();
+    toggleCheckbox();
+});
